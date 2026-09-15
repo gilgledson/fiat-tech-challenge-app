@@ -1,0 +1,37 @@
+sequenceDiagram
+    actor Cliente
+    participant FN as Azure Function<br/>(oficina-auth-cpf)
+    participant PG as Postgres<br/>(tabela cliente)
+    participant API as Oficina API<br/>(via Gateway Traefik)
+
+    Cliente->>FN: POST /api/auth/cpf<br/>{ "cpf": "52998224725" }
+
+    activate FN
+    FN->>FN: Valida formato do CPF<br/>(dígito verificador)
+
+    alt CPF com formato inválido
+        FN-->>Cliente: 400 Bad Request
+    else CPF válido
+        FN->>PG: SELECT id, nome, email, deletado_em<br/>FROM cliente WHERE cpf_cnpj = ?
+        activate PG
+        PG-->>FN: linha do cliente (ou nenhuma)
+        deactivate PG
+
+        alt Cliente não encontrado
+            FN-->>Cliente: 404 Not Found
+        else Cliente encontrado mas deletado_em preenchido
+            FN-->>Cliente: 403 Forbidden (cliente inativo)
+        else Cliente encontrado e ativo
+            FN->>FN: Assina JWT RS256<br/>(mesma chave privada da API)<br/>iss=oficina-api-interna, groups=[CLIENTE]
+            FN-->>Cliente: 200 OK<br/>{ access_token, token_type, expires_in }
+        end
+    end
+    deactivate FN
+
+    Note over Cliente,API: A partir daqui o cliente já está autenticado
+
+    Cliente->>API: GET /api/ordens/{id}<br/>Authorization: Bearer {access_token}
+    activate API
+    API->>API: Valida assinatura JWT (chave pública)<br/>e claim groups=CLIENTE (@RolesAllowed)
+    API-->>Cliente: 200 OK (dados da OS)
+    deactivate API

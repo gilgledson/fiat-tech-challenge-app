@@ -1,0 +1,62 @@
+sequenceDiagram
+    actor Atendente
+    participant GW as Traefik<br/>(API Gateway)
+    participant API as OrdemDeServicoController
+    participant UC as AbrirOrdemDeServicoUseCase
+    participant ATD as AtendimentoGateway<br/>(Cliente / Veículo)
+    participant DB as Postgres<br/>(ordem_de_servico)
+    participant BUS as EventBus (Vert.x)
+    participant NOTIF as NotificacaoGateway
+
+    Note over Atendente,API: Pré-condição: Atendente já autenticado<br/>(login e-mail/senha, JWT groups=ATENDENTE)
+
+    Atendente->>GW: POST /api/ordens<br/>Authorization: Bearer {token}<br/>{ clienteId, veiculoId, descricaoProblema, servicos? }
+    GW->>API: roteia (Ingress)
+
+    activate API
+    API->>API: @RolesAllowed({ADMIN, ATENDENTE})<br/>valida JWT
+
+    API->>UC: executar(clienteId, veiculoId, descricaoProblema, servicos)
+    activate UC
+
+    UC->>ATD: buscarClientePorId(clienteId)
+    activate ATD
+    ATD->>DB: SELECT ... FROM cliente WHERE id = ?
+    DB-->>ATD: cliente (ou vazio)
+    ATD-->>UC: Optional<Cliente>
+    deactivate ATD
+
+    alt Cliente não encontrado
+        UC-->>API: 404 Not Found
+    else
+        UC->>ATD: buscarVeiculoPorId(veiculoId)
+        activate ATD
+        ATD->>DB: SELECT ... FROM veiculo WHERE id = ?
+        DB-->>ATD: veículo (ou vazio)
+        ATD-->>UC: Optional<VeiculoSnapshot>
+        deactivate ATD
+
+        alt Veículo não encontrado, ou não pertence ao cliente
+            UC-->>API: 404 / 400
+        else Tudo válido
+            UC->>UC: monta OrdemDeServico<br/>status = ABERTA, dataAbertura = now()
+            UC->>DB: INSERT INTO ordem_de_servico (...)
+            DB-->>UC: OK
+
+            UC->>BUS: publish(OrdemServicoAberta)
+            BUS-->>NOTIF: evento consumido (assíncrono)
+            NOTIF-->>Atendente: (fora do fluxo síncrono)<br/>notificação ao cliente
+
+            opt servicos informados na abertura
+                loop para cada serviço/peça
+                    UC->>DB: adiciona serviço à OS<br/>(reserva de estoque, se houver produto)
+                end
+            end
+
+            UC-->>API: OrdemDeServicoOutput
+        end
+    end
+    deactivate UC
+
+    API-->>Atendente: 201 Created (JSON da OS)
+    deactivate API

@@ -1,0 +1,76 @@
+graph TB
+    CLIENTE["Cliente / Front-end<br/>Postman · Swagger UI · App"]
+
+    subgraph AZURE["Microsoft Azure — Brazil South"]
+        direction TB
+
+        subgraph AKS["AKS — Cluster Kubernetes (oficina-aks-cluster)"]
+            direction TB
+            GW_SVC["Service: traefik<br/>(LoadBalancer, :80)"]
+            GW["Traefik<br/>API Gateway / Ingress Controller"]
+            API_SVC["Service: oficina-api-service<br/>(ClusterIP, interno)"]
+            API["Deployment: oficina-api<br/>(Quarkus, N réplicas)"]
+            HPA["HorizontalPodAutoscaler<br/>alvo: CPU 70% (1-8 réplicas)"]
+            NR_INFRA["New Relic Infrastructure Agent<br/>(DaemonSet, Helm nri-bundle)"]
+
+            GW_SVC --> GW
+            GW -->|"roteia via Ingress"| API_SVC
+            API_SVC --> API
+            HPA -.escala.-> API
+        end
+
+        subgraph SERVERLESS["Function Serverless (Consumption Plan)"]
+            FN["Azure Function: oficina-auth-cpf<br/>Node.js — POST /api/auth/cpf"]
+        end
+
+        subgraph DADOS["Dados"]
+            direction TB
+            PG[("Azure Database for PostgreSQL<br/>Flexible Server<br/>(gerenciado)")]
+            BLOB[("Azure Blob Storage<br/>container: assinaturas")]
+        end
+
+        subgraph OBS["Observabilidade — New Relic"]
+            direction TB
+            NR_APM["APM<br/>(Java Agent embutido na imagem)"]
+            NR_DASH["Dashboards + Alertas<br/>(provisionados via Terraform)"]
+        end
+    end
+
+    subgraph CICD["CI/CD — GitHub Actions"]
+        direction TB
+        GH["Push na main"]
+        BUILD["Build + Testes<br/>(JUnit5, JaCoCo)"]
+        DOCKER["Build & push da imagem<br/>Docker Hub"]
+        DEPLOY["kubectl apply<br/>(Azure/k8s-deploy)"]
+        GH --> BUILD --> DOCKER --> DEPLOY
+    end
+
+    subgraph IAC["Infraestrutura como Código — Terraform"]
+        TF["AKS · Postgres · Storage ·<br/>Function App · New Relic (alertas/dashboard)"]
+    end
+
+    CLIENTE -->|"HTTPS"| GW_SVC
+    CLIENTE -.->|"POST /api/auth/cpf<br/>(login por CPF)"| FN
+
+    API -->|"JDBC + SSL"| PG
+    FN -->|"consulta cliente<br/>(mesma base)"| PG
+    API -->|"upload/download<br/>assinatura de orçamento"| BLOB
+    FN -.->|"emite JWT<br/>(mesma chave/issuer que a API valida)"| CLIENTE
+
+    API -.reporta traces/erros/latência.-> NR_APM
+    NR_INFRA -.monitora CPU/memória/eventos.-> NR_DASH
+    NR_APM --> NR_DASH
+
+    DEPLOY -->|"aplica manifests /k8s"| AKS
+    TF -.provisiona.-> AKS
+    TF -.provisiona.-> PG
+    TF -.provisiona.-> BLOB
+    TF -.provisiona.-> FN
+    TF -.provisiona.-> NR_DASH
+
+    style AKS fill:#e8f0fe,stroke:#4285f4
+    style SERVERLESS fill:#fff7e6,stroke:#f9a825
+    style DADOS fill:#e8f0fe,stroke:#4285f4
+    style OBS fill:#f3e8fd,stroke:#8e44ad
+    style CICD fill:#fce8e6,stroke:#ea4335
+    style IAC fill:#f0fdf4,stroke:#34a853

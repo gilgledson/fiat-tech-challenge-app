@@ -1,0 +1,16 @@
+# Serviço interno ao cluster. O acesso externo passa a ser feito pelo
+# API Gateway (Traefik, ver k8s/gateway/), que expõe a porta 80 via
+# LoadBalancer e roteia para este Service através do Ingress
+# k8s/gateway/ingress.yaml.
+apiVersion: v1
+kind: Service
+metadata:
+  name: oficina-api-service
+spec:
+  selector:
+    app: oficina-api
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP

@@ -1,0 +1,142 @@
+erDiagram
+    USUARIO {
+        uuid id PK
+        varchar email UK
+        varchar senha_hash
+        varchar perfil "CHECK: ADMIN|MECANICO|ATENDENTE|CLIENTE"
+        boolean ativo
+    }
+
+    CLIENTE {
+        uuid id PK
+        uuid usuario_id FK "nullable, UNIQUE"
+        varchar nome
+        varchar cpf_cnpj UK
+        varchar telefone
+        varchar cep
+        varchar logradouro
+        varchar bairro
+        varchar cidade
+        char uf
+        varchar email
+        timestamp deletado_em "soft delete"
+    }
+
+    VEICULO {
+        uuid id PK
+        uuid cliente_id FK
+        varchar placa UK
+        varchar marca
+        varchar modelo
+        int ano
+        timestamp deletado_em "soft delete"
+    }
+
+    FUNCIONARIOS {
+        uuid id PK
+        uuid usuario_id FK "nullable no SQL, UNIQUE"
+        varchar nome
+        varchar sobrenome
+        varchar cpf UK
+        varchar cargo "CHECK: MECANICO|ATENDENTE|ADMINISTRADOR"
+        boolean ativo
+        timestamp deletado_em "soft delete"
+    }
+
+    SERVICO {
+        uuid id PK
+        varchar nome
+        varchar tipo "CHECK: CORRETIVO|PREVENTIVO"
+        decimal preco_base
+        timestamp deletado_em "soft delete"
+    }
+
+    PRODUTO {
+        uuid id PK
+        varchar nome
+        varchar codigo_barras UK
+        decimal preco_unitario
+        decimal quantidade_estoque_fisico
+        decimal quantidade_estoque_reservado "CHECK: reservado <= fisico"
+        varchar unidade_medida "CHECK: UN|LT|KG|MT"
+        bigint versao "lock otimista"
+        timestamp deletado_em "soft delete"
+    }
+
+    SERVICO_PRODUTO_SUGERIDO {
+        uuid servico_id FK
+        uuid produto_id FK
+        decimal quantidade
+    }
+
+    ORDEM_DE_SERVICO {
+        uuid id PK
+        uuid cliente_id FK
+        uuid veiculo_id FK
+        text descricao_problema
+        varchar status "CHECK: 13 valores, ver justificativa"
+        timestamp data_criacao
+        timestamp data_inicio_execucao
+        timestamp data_fim_execucao
+        varchar motivo_cancelamento
+        timestamp deletado_em "soft delete"
+    }
+
+    ORDEM_DE_SERVICO_SERVICOS {
+        uuid id PK
+        uuid ordem_de_servico_id FK
+        uuid servico_id FK
+        uuid usuario_executor_id FK "nullable"
+        varchar nome
+        decimal quantidade
+        decimal valor_unitario
+        decimal valor_total
+        varchar tipo "CHECK: PREVENTIVO|CORRETIVO"
+        varchar status "CHECK: 6 valores"
+        timestamp data_inicio_execucao
+        timestamp data_fim_execucao
+    }
+
+    ORDEM_DE_SERVICO_PRODUTOS {
+        uuid id PK
+        uuid ordem_de_servico_id FK
+        uuid produto_id FK
+        uuid os_servico_id FK "nullable"
+        varchar nome
+        int quantidade
+        decimal valor_unitario
+        decimal valor_total
+    }
+
+    ORCAMENTO {
+        uuid id PK
+        uuid ordem_servico_id FK "UNIQUE — 1:1"
+        decimal valor_total
+        varchar status "SEM CHECK constraint — só validado no Java"
+        varchar metodo_pagamento "CHECK: DINHEIRO|CARTAO_CREDITO|CARTAO_DEBITO|PIX"
+        timestamp data_emissao
+        timestamp data_vencimento
+        timestamp data_pagamento
+        varchar assinatura_cliente
+    }
+
+    USUARIO ||--o| CLIENTE : "pode ter conta em"
+    USUARIO ||--o| FUNCIONARIOS : "pode ser"
+    USUARIO ||--o{ ORDEM_DE_SERVICO_SERVICOS : "executa (usuario_executor_id)"
+
+    CLIENTE ||--o{ VEICULO : possui
+    CLIENTE ||--o{ ORDEM_DE_SERVICO : solicita
+
+    VEICULO ||--o{ ORDEM_DE_SERVICO : "é alvo de"
+
+    SERVICO ||--o{ SERVICO_PRODUTO_SUGERIDO : sugere
+    PRODUTO ||--o{ SERVICO_PRODUTO_SUGERIDO : "é sugerido para"
+
+    SERVICO ||--o{ ORDEM_DE_SERVICO_SERVICOS : "é executado como"
+    ORDEM_DE_SERVICO ||--o{ ORDEM_DE_SERVICO_SERVICOS : contém
+
+    PRODUTO ||--o{ ORDEM_DE_SERVICO_PRODUTOS : "é consumido em"
+    ORDEM_DE_SERVICO ||--o{ ORDEM_DE_SERVICO_PRODUTOS : contém
+    ORDEM_DE_SERVICO_SERVICOS ||--o{ ORDEM_DE_SERVICO_PRODUTOS : "associa peça a (opcional)"
+
+    ORDEM_DE_SERVICO ||--o| ORCAMENTO : gera

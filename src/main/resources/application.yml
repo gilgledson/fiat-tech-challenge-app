@@ -1,0 +1,70 @@
+quarkus:
+  swagger-ui:
+    always-include: true
+  http:
+    port: 8080
+  datasource:
+    db-kind: postgresql
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    jdbc:
+      url: ${DB_URL_RW}
+    ro:
+      db-kind: postgresql
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
+      jdbc:
+        url: ${DB_URL_RO}
+  fault-tolerance:
+    bulkhead:
+      max-concurrent-calls: 20
+      waiting-task-queue: 40
+  hibernate-orm:
+    log:
+      sql: false
+  log:
+    category:
+      "org.hibernate":
+        level: WARN
+    console:
+      json: true
+
+  # Configurações do Flyway (Migrações)
+  flyway:
+    migrate-at-start: true
+    repair-at-start: true
+    baseline-on-migrate: true
+    out-of-order: true
+    ignore-missing-migrations: true
+  # Configuração da extensão de Segurança (SmallRye JWT)
+  smallrye-jwt:
+    enabled: true
+
+smallrye:
+  jwt:
+    sign:
+      key:
+        location: "privateKey.pem"
+    verify:
+      issuer: "oficina-api-interna"
+      key:
+        location: "publicKey.pem"
+
+# Secret compartilhado para endpoints de webhook (ex: notificação externa de
+# aprovação de orçamento). Trocar via WEBHOOK_APROVACAO_SECRET em qualquer
+# ambiente real — o default aqui só serve para desenvolvimento local.
+oficina:
+  webhook:
+    aprovacao-secret: ${WEBHOOK_APROVACAO_SECRET:local-dev-secret-trocar-em-producao}
+  storage:
+    # Implementação de armazenamento das assinaturas de aceite de orçamento:
+    # "local" (disco do pod — só serve pra dev, é efêmero) ou "azure" (Azure
+    # Blob Storage, provisionado via infra/storage.tf — padrão de produção).
+    # Ver StorageServiceProducer.
+    type: ${STORAGE_TYPE:local}
+    azure:
+      # Trocar via AZURE_STORAGE_CONNECTION_STRING em produção.
+      # O default abaixo é a connection string pública e bem conhecida do
+      # emulador Azurite — só funciona se o Azurite estiver rodando localmente.
+      connection-string: ${AZURE_STORAGE_CONNECTION_STRING:DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;}
+      container: ${AZURE_STORAGE_CONTAINER:assinaturas}
