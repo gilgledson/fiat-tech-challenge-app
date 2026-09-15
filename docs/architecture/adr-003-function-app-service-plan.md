@@ -1,6 +1,7 @@
 # ADR-003 — Plano de hospedagem da Function Serverless (Consumption Plan)
 
-- **Status**: Aceito e resolvido (ver "Atualização" no final)
+- **Status**: Revisado — migrado de Y1 (Consumption) para B1 (Basic) por
+  restrição de cota da assinatura (ver "Atualização 2" no final)
 
 ## Contexto
 
@@ -69,3 +70,28 @@ sem custo de infraestrutura ociosa) sem depender de aprovação de aumento de
 cota. Se a região `East US` também não tiver cota disponível numa
 assinatura específica, a variável pode ser sobrescrita
 (`TF_VAR_function_location`) para qualquer outra região sem alterar código.
+
+## Atualização 2 — a restrição é da assinatura inteira, não da região
+
+A troca de região **não resolveu**: o `terraform apply` em `East US` falhou
+com o **mesmo erro exato** (`401 — Current Limit (Y1 VMs): 0`) que já
+tinha acontecido em `Brazil South`. Evidência direta de que essa
+assinatura Azure específica tem cota zero para VMs "Dynamic" (a família
+usada pelo Consumption Plan) em **toda a assinatura**, não por região —
+comum em assinaturas de estudante/trial com restrições agregadas.
+
+Decisão final: trocar `sku_name` de `Y1` (Consumption) para **`B1`
+(Basic)**, via nova variável `var.function_plan_sku` (padrão `"B1"`, pode
+ser sobrescrita de volta para `"Y1"` se a cota for aprovada no futuro).
+B1 é compute "normal" (família B-series), sem a restrição de cota que
+bloqueava o Y1.
+
+**Isso reabre a consequência negativa original desta ADR** (custo fixo,
+plano sempre ligado, sem escalar a zero) — mas é uma troca deliberada e
+documentada, não um desvio silencioso: a Function continua sendo uma
+"Function Serverless" do ponto de vista do requisito do desafio (código
+event-driven via HTTP trigger, deploy via Azure Functions Core Tools), só
+o **plano de hospedagem** deixou de ser Consumption puro. Custo estimado do
+B1: baixo (~R$50-80/mês se ligado o mês inteiro) — `terraform destroy`
+quando não estiver em uso, mesma recomendação dada para os outros recursos
+deste projeto.
