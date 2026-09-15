@@ -1,6 +1,6 @@
 # ADR-003 — Plano de hospedagem da Function Serverless (Consumption Plan)
 
-- **Status**: Aceito, com pendência operacional conhecida
+- **Status**: Aceito e resolvido (ver "Atualização" no final)
 
 ## Contexto
 
@@ -38,14 +38,34 @@ autenticação por CPF (chamada só no login, não em toda requisição).
   código validados localmente, mas o `Service Plan`/`Function App` em si
   não foram criados na nuvem) — ver pendência registrada em
   [`TODO.md`](../../TODO.md).
-- **Caminhos de resolução, para quando a cota for tratada**:
+- **Caminhos de resolução considerados**:
   1. Solicitar aumento de cota via Azure Portal (Help + Support → Service
      and subscription limits (quotas) → App Service → Consumption Y1 VMs)
-     — pode não ser imediato em assinaturas de estudante/trial.
-  2. Tentar provisionar em outra região com cota disponível (cota de
-     Consumption Plan é por região/assinatura).
-  3. Como último recurso, trocar para um **App Service Plan Basic (B1)**
-     dedicado só para a Function — sai da definição estrita de
-     "serverless paga por execução", mas desbloqueia o deploy sem depender
-     de aprovação de cota; essa troca ficaria registrada como revisão desta
-     ADR se adotada.
+     — descartado por não ser imediato (depende de aprovação, incerta em
+     assinaturas de estudante/trial).
+  2. Provisionar em outra região com cota disponível (cota de Consumption
+     Plan é por região/assinatura) — **adotado**, ver "Atualização" abaixo.
+  3. Trocar para um App Service Plan Basic (B1) dedicado — descartado por
+     sair da definição estrita de "serverless paga por execução"; mantido
+     como fallback caso a opção 2 também esbarre em cota em outra região.
+
+## Atualização — resolvido via região diferente
+
+A criação do `azurerm_service_plan`/`azurerm_linux_function_app` com SKU
+`Y1` continuava falhando em `Brazil South`
+(`401 — Current Limit (Y1 VMs): 0`). Como o Resource Group já existia
+provisionado por outro repositório (`oficina-infra-kubernetes`) e não podia
+ser recriado em outra região sem afetar o AKS/Postgres, a solução foi
+provisionar **só os recursos da Function** (Storage Account, Service Plan,
+Function App) numa região diferente do Resource Group — `East US`, via a
+nova variável `var.function_location` em
+[`infra/variables.tf`](https://github.com/SEU_USUARIO/oficina-lambda-auth-cpf/blob/main/infra/variables.tf)
+(repositório `oficina-lambda-auth-cpf`). Azure permite recursos em qualquer
+região dentro de um Resource Group, independente da região "padrão" do
+próprio Resource Group — não há acoplamento técnico entre as duas.
+
+Isso preserva a decisão original desta ADR (Consumption Plan de verdade,
+sem custo de infraestrutura ociosa) sem depender de aprovação de aumento de
+cota. Se a região `East US` também não tiver cota disponível numa
+assinatura específica, a variável pode ser sobrescrita
+(`TF_VAR_function_location`) para qualquer outra região sem alterar código.
