@@ -190,11 +190,7 @@ Tudo em [`docs/architecture/`](docs/architecture) (índice completo em
       +
       [`der-oficina-api.mmd`](docs/architecture/der-oficina-api.mmd).
       **Schema real levantado das 21 migrations Flyway** (não um desenho
-      teórico) — 11 tabelas, 14 FKs, 2 views de relatório. A auditoria achou
-      e documentou 5 divergências reais entre schema/código (ex:
-      `orcamento.status` sem `CHECK` constraint, dois campos de quantidade
-      com tipo Java/SQL diferente) — não corrigidas nesta fase, registradas
-      como recomendação.
+      teórico) — 11 tabelas, 14 FKs, 2 views de relatório.
 
 ## README.md de cada repositório
 
