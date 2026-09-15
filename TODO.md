@@ -58,13 +58,19 @@ de deploy já implementados).
     de App Service Plan na assinatura) → **criado manualmente pelo Portal
     Azure usando o plano `FC1` (Flex Consumption)**, uma família de cota
     diferente que a assinatura tinha liberada.
-  - **Pendência real**: o `infra/function.tf` ainda declara os recursos
-    com SKU `B1` e nome `oficina-auth-cpf` — **não bate** com o que existe
-    de fato na nuvem (`FC1`, nome `oficina-lambda-auth-cpf`, criado fora do
-    Terraform). Terraform não gerencia esse recurso ainda. Para corrigir:
-    atualizar `function.tf` para usar o recurso
-    `azurerm_function_app_flex_consumption` (SKU `FC1`) com os nomes
-    corretos, e rodar `terraform import` nos recursos já existentes.
+  - **Terraform reconciliado com a realidade** (repositório
+    `oficina-lambda-auth-cpf`): Storage Account de deployment, Service
+    Plan (SKU `FC1`) e Application Insights reais foram importados de
+    verdade, com os valores reais travados no config — `terraform plan`
+    limpo (`0/0/0`). Achado e limpo de quebra: o state local tinha uma
+    Storage Account órfã (`oficinafntdesdq`, East US) de uma tentativa
+    `Y1` fracassada.
+  - **Pendência real remanescente**: o Function App em si ainda está fora
+    do Terraform — representá-lo (plano Flex Consumption) exige o recurso
+    `azurerm_function_app_flex_consumption`, que só existe a partir da
+    versão 4.x do provider `azurerm` (este repositório está em `~> 3.0`,
+    mesma versão dos outros 3 repositórios). É um upgrade maior, isolado
+    a esse repositório, ainda não feito.
 
 ## Estrutura de Repositórios e CI/CD
 
