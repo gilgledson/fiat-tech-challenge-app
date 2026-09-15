@@ -2,16 +2,15 @@
 # local do pod (efêmero: some a cada restart/redeploy e não é compartilhado
 # entre réplicas do HPA) — agora vão pro Azure Blob Storage.
 
-# Nome de Storage Account precisa ser globalmente único em todo o Azure,
-# então usamos um sufixo aleatório em vez de fixar um nome.
-resource "random_string" "storage_suffix" {
-  length  = 6
-  special = false
-  upper   = false
-}
-
+# Nome de Storage Account precisa ser globalmente único em todo o Azure — foi
+# gerado uma vez com sufixo aleatório e fixado aqui (não usamos mais
+# `random_string` pra isso: um recurso "random" não tem objeto real na nuvem
+# pra conferir num `terraform import`, então ele sempre assume os parâmetros
+# padrão do provider e força recriação da Storage Account real no primeiro
+# `apply` pós-import — arriscado, já que ela guarda os arquivos de assinatura
+# dos orçamentos).
 resource "azurerm_storage_account" "oficina_storage" {
-  name                     = "oficinasign${random_string.storage_suffix.result}"
+  name                     = "oficinasign0pqr9z"
   resource_group_name      = data.azurerm_resource_group.oficina_rg.name
   location                 = data.azurerm_resource_group.oficina_rg.location
   account_tier             = "Standard"
