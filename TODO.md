@@ -44,17 +44,27 @@ de deploy já implementados).
     8 requests / 12 assertions, todas passando. Cobertura em
     [`docs/postman_collection.json`](docs/postman_collection.json), pasta
     "Fase 3 - Autenticação CPF (Function Serverless)".
-  - **Bloqueio de cota resolvido**: `azurerm_service_plan` (Y1/Consumption)
-    falhava com `401 — Current Limit (Y1 VMs): 0` na assinatura em
-    `Brazil South`. Corrigido provisionando só os recursos da Function em
-    `East US` (`var.function_location` em
-    `oficina-lambda-auth-cpf/infra/variables.tf`), mantendo o Resource Group
-    em Brazil South — ver
-    [ADR-003](docs/architecture/adr-003-function-app-service-plan.md),
-    seção "Atualização".
-  - **Ainda pendente**: rodar o `terraform apply` de verdade (com as
-    credenciais reais) e o `func azure functionapp publish` — a correção de
-    região foi validada só via `terraform validate`, não aplicada ainda.
+  - **Publicada e funcionando em produção**: `oficina-lambda-auth-cpf` está
+    no ar na Azure (plano `FC1`/Flex Consumption), com as variáveis de
+    ambiente configuradas e o código publicado
+    (`func azure functionapp publish`). CI/CD configurado para publicar o
+    código automaticamente a cada push na `main`
+    (`Azure/functions-action@v1`).
+  - **Jornada até chegar lá** (documentada em detalhe no
+    [ADR-003](docs/architecture/adr-003-function-app-service-plan.md)):
+    `Y1` (Consumption) falhou por cota zero em Brazil South → trocar região
+    pra East US não resolveu (mesmo erro) → trocar SKU pra `B1` (Basic)
+    também não resolveu (mesmo erro, cota 0 pra qualquer família clássica
+    de App Service Plan na assinatura) → **criado manualmente pelo Portal
+    Azure usando o plano `FC1` (Flex Consumption)**, uma família de cota
+    diferente que a assinatura tinha liberada.
+  - **Pendência real**: o `infra/function.tf` ainda declara os recursos
+    com SKU `B1` e nome `oficina-auth-cpf` — **não bate** com o que existe
+    de fato na nuvem (`FC1`, nome `oficina-lambda-auth-cpf`, criado fora do
+    Terraform). Terraform não gerencia esse recurso ainda. Para corrigir:
+    atualizar `function.tf` para usar o recurso
+    `azurerm_function_app_flex_consumption` (SKU `FC1`) com os nomes
+    corretos, e rodar `terraform import` nos recursos já existentes.
 
 ## Estrutura de Repositórios e CI/CD
 

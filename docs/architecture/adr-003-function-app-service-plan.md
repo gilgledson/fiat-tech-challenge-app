@@ -1,7 +1,8 @@
 # ADR-003 — Plano de hospedagem da Function Serverless (Consumption Plan)
 
-- **Status**: Revisado — migrado de Y1 (Consumption) para B1 (Basic) por
-  restrição de cota da assinatura (ver "Atualização 2" no final)
+- **Status**: Resolvido — publicado em produção no plano FC1/Flex
+  Consumption (ver "Atualização 3" no final). O Terraform deste repositório
+  ainda não reflete essa decisão final (pendência registrada no TODO.md).
 
 ## Contexto
 
@@ -95,3 +96,39 @@ o **plano de hospedagem** deixou de ser Consumption puro. Custo estimado do
 B1: baixo (~R$50-80/mês se ligado o mês inteiro) — `terraform destroy`
 quando não estiver em uso, mesma recomendação dada para os outros recursos
 deste projeto.
+
+## Atualização 3 — B1 também bloqueado; resolvido com FC1 (Flex Consumption)
+
+O `terraform apply` com `sku_name = "B1"` falhou com o **mesmo padrão de
+erro** da tentativa com `Y1` — só trocando "Y1 VMs" por "B1 VMs" na
+mensagem (`401 — Current Limit (B1 VMs): 0`). Isso reformulou o
+diagnóstico: a assinatura não tem cota zero só pra "Dynamic" (Y1) — tem
+cota zero pra **qualquer família clássica de App Service Plan**
+(`Microsoft.Web/serverfarms` compute), independente do SKU. AKS não sofre
+disso porque usa uma família de cota de VM totalmente diferente
+(`Microsoft.Compute`, não `Microsoft.Web`).
+
+Criar o Function App **manualmente pelo Portal Azure** (mesmo Resource
+Group, mesma assinatura) funcionou de primeira, usando o SKU **`FC1`
+(Flex Consumption)** — um plano mais novo do Azure Functions, com uma
+família de cota própria (`FC`), diferente das famílias `Y1`/`Dynamic` e
+`B1`/`Basic` que estavam zeradas. A assinatura tinha cota disponível
+especificamente para essa família.
+
+**Decisão final**: usar `FC1` (Flex Consumption) como plano de hospedagem.
+Reabre a vantagem original desta ADR (paga por execução, sem custo de
+infraestrutura ociosa) — Flex Consumption é, na prática, a evolução do
+Consumption Plan clássico.
+
+**Situação atual (débito técnico registrado)**: o Function App
+(`oficina-lambda-auth-cpf`) está publicado e funcionando em produção, com
+variáveis de ambiente configuradas e deploy automático via CI/CD
+(`Azure/functions-action@v1` no repositório `oficina-lambda-auth-cpf`) —
+mas foi **criado manualmente**, não pelo `terraform apply`. O
+`infra/function.tf` ainda declara os recursos com SKU `B1` e o nome
+`oficina-auth-cpf` (diferente do nome real, `oficina-lambda-auth-cpf`).
+Terraform não gerencia esse recurso hoje. Próximo passo: reescrever
+`function.tf` usando o recurso `azurerm_function_app_flex_consumption`
+(SKU `FC1`, disponível em versões mais recentes do provider `azurerm`) com
+os nomes corretos, e rodar `terraform import` nos recursos já existentes
+para que o Terraform passe a gerenciá-los sem recriar do zero.
