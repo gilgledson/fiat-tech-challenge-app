@@ -86,8 +86,9 @@ de deploy já implementados).
       Repositórios de infraestrutura (`infra-kubernetes`, `infra-database`)
       só precisam do `AZURE_CREDENTIALS` cada (Service Principal próprio,
       escopado ao resource group `oficina-resources`).
-- [ ] Proteger a branch `main`/`master` em cada repositório (sem commits diretos,
-      PR obrigatório para merge) — **ainda não configurado**.
+- [x] Proteger a branch `main`/`master` em cada repositório (sem commits diretos,
+      PR obrigatório para merge) — configurado nos 4 repositórios (regra com
+      bypass liberado só pro dono, mesmo padrão em todos).
 - [x] Deploy automático para a nuvem: **só o repositório da aplicação
       principal** tem deploy 100% automático (build+push+k8s apply a cada
       push na `main`) — decisão deliberada, documentada nos READMEs dos 3
@@ -197,10 +198,11 @@ Tudo em [`docs/architecture/`](docs/architecture) (índice completo em
 
 ## README.md de cada repositório
 
-- [ ] Atualizar/criar README com: descrição do propósito, tecnologias, passos
+- [x] Atualizar/criar README com: descrição do propósito, tecnologias, passos
       de execução/deploy, diagrama de arquitetura específico e link do
-      Swagger/Postman — em cada um dos 4 repositórios (o README atual cobre
-      bem a Fase 2, mas não os itens novos da Fase 3).
+      Swagger/Postman — em cada um dos 4 repositórios. Links cruzados entre
+      repositórios corrigidos (placeholders `SEU_USUARIO` substituídos pelo
+      usuário real em todos os arquivos, incluindo docs/architecture).
 
 ## Vídeo de demonstração
 
@@ -214,9 +216,10 @@ Tudo em [`docs/architecture/`](docs/architecture) (índice completo em
 
 ## Entrega no Portal do Aluno
 
-- [ ] Montar PDF único com: links dos 4 repositórios, link do vídeo (≤15 min),
-      links das documentações e confirmação de que o usuário
-      `soat-architecture` foi adicionado a todos os repositórios.
+- [x] Adicionar o usuário `soat-architecture` como colaborador nos 4
+      repositórios.
+- [ ] Montar PDF único com: links dos 4 repositórios, link do vídeo (≤15 min)
+      e links das documentações — falta gravar o vídeo primeiro.
 
 ## Achado à parte (segurança, fora do escopo da Fase 3)
 
