@@ -58,19 +58,18 @@ de deploy já implementados).
     de App Service Plan na assinatura) → **criado manualmente pelo Portal
     Azure usando o plano `FC1` (Flex Consumption)**, uma família de cota
     diferente que a assinatura tinha liberada.
-  - **Terraform reconciliado com a realidade** (repositório
-    `oficina-lambda-auth-cpf`): Storage Account de deployment, Service
-    Plan (SKU `FC1`) e Application Insights reais foram importados de
-    verdade, com os valores reais travados no config — `terraform plan`
-    limpo (`0/0/0`). Achado e limpo de quebra: o state local tinha uma
-    Storage Account órfã (`oficinafntdesdq`, East US) de uma tentativa
-    `Y1` fracassada.
-  - **Pendência real remanescente**: o Function App em si ainda está fora
-    do Terraform — representá-lo (plano Flex Consumption) exige o recurso
-    `azurerm_function_app_flex_consumption`, que só existe a partir da
-    versão 4.x do provider `azurerm` (este repositório está em `~> 3.0`,
-    mesma versão dos outros 3 repositórios). É um upgrade maior, isolado
-    a esse repositório, ainda não feito.
+  - **Terraform totalmente reconciliado com a realidade** (repositório
+    `oficina-lambda-auth-cpf`): provider `azurerm` atualizado pra `~> 4.0`
+    (isolado a esse repositório) para poder usar
+    `azurerm_function_app_flex_consumption` — o Function App real, a
+    Storage Account de deployment, o Service Plan (SKU `FC1`) e o
+    Application Insights foram todos importados de verdade, com os
+    valores reais travados no config. `terraform plan` limpo (`0/0/0`).
+    `app_settings` (segredos) ficam fora de propósito
+    (`lifecycle.ignore_changes`), configurados manualmente via
+    `az functionapp config appsettings set`. De quebra, achei e apaguei
+    2 Storage Accounts órfãs (`oficinafnt5584r`, `oficinafntdesdq`) de
+    tentativas `Y1`/`B1` fracassadas, sem uso e gerando custo à toa.
 
 ## Estrutura de Repositórios e CI/CD
 
