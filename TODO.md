@@ -44,6 +44,12 @@ de deploy já implementados).
     8 requests / 12 assertions, todas passando. Cobertura em
     [`docs/postman_collection.json`](docs/postman_collection.json), pasta
     "Fase 3 - Autenticação CPF (Function Serverless)".
+  - **Revalidado contra produção** (Traefik real + Function real + Postgres
+    real): coleção inteira, 51 requests / 57 assertions, 0 falhas —
+    `newman run docs/postman_collection.json --env-var "baseUrl=..." --env-var "cpfAuthUrl=..." --env-var "webhookAprovacaoSecret=..."`.
+    De quebra, rotacionado o `WEBHOOK_APROVACAO_SECRET` (secret do cluster e
+    do GitHub sincronizados) e confirmado que o HPA escala de verdade sob
+    carga (1 → 6 réplicas durante o teste).
   - **Publicada e funcionando em produção**: `oficina-lambda-auth-cpf` está
     no ar na Azure (plano `FC1`/Flex Consumption), com as variáveis de
     ambiente configuradas e o código publicado
