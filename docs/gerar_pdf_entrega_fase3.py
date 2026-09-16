@@ -33,7 +33,7 @@ SCREENSHOTS = [
 ]
 
 # ── Preencher antes de gerar o PDF final ────────────────────────────────────
-VIDEO_URL = "https://SUBSTITUIR-PELO-LINK-DO-VIDEO-NO-YOUTUBE-OU-VIMEO"
+VIDEO_URL = "https://drive.google.com/file/d/1UD4ez7I80B7l3tExast0C0Fk66_rkDFQ/view?usp=sharing"
 # ─────────────────────────────────────────────────────────────────────────
 
 REPOS = [
