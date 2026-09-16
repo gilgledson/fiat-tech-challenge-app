@@ -62,7 +62,7 @@ token com `groups: ["CLIENTE"]`.
 ## Decisão
 
 Adotar a **Alternativa C**. A Function `oficina-auth-cpf`
-(repositório [`oficina-lambda-auth-cpf`](https://github.com/SEU_USUARIO/oficina-lambda-auth-cpf)):
+(repositório [`oficina-lambda-auth-cpf`](https://github.com/gilgledson/fiat-tech-challenge-lambda-auth-cpf)):
 
 1. Valida o formato do CPF (dígito verificador) localmente, sem chamar a
    API.

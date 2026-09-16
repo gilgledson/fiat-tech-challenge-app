@@ -28,7 +28,7 @@ gerenciado e uma "justificativa formal" para a escolha.
 
 Manter **PostgreSQL**, provisionado como **Azure Database for PostgreSQL
 Flexible Server** (SKU `B_Standard_B1ms`, versão 13), gerenciado via
-Terraform em [`infra/database.tf`](https://github.com/SEU_USUARIO/oficina-infra-banco-dados/blob/main/infra/database.tf)
+Terraform em [`infra/database.tf`](https://github.com/gilgledson/fiat-tech-challenge-infra-database/blob/main/infra/database.tf)
 (repositório `oficina-infra-banco-dados`).
 
 Motivos técnicos concretos, com base no schema real (ver

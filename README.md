@@ -7,12 +7,9 @@
 > **Clean Architecture**. Este é o repositório da **aplicação principal**,
 > um dos 4 repositórios do Tech Challenge Fase 3 — ver os outros:
 
-- [oficina-infra-kubernetes](https://github.com/SEU_USUARIO/oficina-infra-kubernetes) — Terraform do cluster AKS + API Gateway (Traefik)
-- [oficina-infra-banco-dados](https://github.com/SEU_USUARIO/oficina-infra-banco-dados) — Terraform do Postgres gerenciado
-- [oficina-lambda-auth-cpf](https://github.com/SEU_USUARIO/oficina-lambda-auth-cpf) — Function Serverless de autenticação por CPF
-
-> Atualize os links acima com as URLs reais assim que os repositórios forem
-> criados no GitHub.
+- [oficina-infra-kubernetes](https://github.com/gilgledson/fiat-tech-challenge-infra-kubernetes) — Terraform do cluster AKS + API Gateway (Traefik)
+- [oficina-infra-banco-dados](https://github.com/gilgledson/fiat-tech-challenge-infra-database) — Terraform do Postgres gerenciado
+- [oficina-lambda-auth-cpf](https://github.com/gilgledson/fiat-tech-challenge-lambda-auth-cpf) — Function Serverless de autenticação por CPF
 
 ---
 
@@ -111,7 +108,7 @@ Toda a documentação arquitetural formal está em
 ## 🗄️ Banco de Dados
 
 Provisionado pelo repositório
-[`oficina-infra-banco-dados`](https://github.com/SEU_USUARIO/oficina-infra-banco-dados)
+[`oficina-infra-banco-dados`](https://github.com/gilgledson/fiat-tech-challenge-infra-database)
 (Terraform, PostgreSQL Flexible Server). Migrations Flyway em
 [`src/main/resources/db/migration/`](src/main/resources/db/migration).
 Modelo relacional completo (11 tabelas, 14 relacionamentos) documentado em

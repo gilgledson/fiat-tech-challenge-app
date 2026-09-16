@@ -19,7 +19,7 @@ Azure oferece basicamente três opções para Azure Functions:
 ## Decisão
 
 Usar **Consumption Plan (SKU `Y1`)**, definido em
-[`infra/function.tf`](https://github.com/SEU_USUARIO/oficina-lambda-auth-cpf/blob/main/infra/function.tf)
+[`infra/function.tf`](https://github.com/gilgledson/fiat-tech-challenge-lambda-auth-cpf/blob/main/infra/function.tf)
 (repositório `oficina-lambda-auth-cpf`)
 (`azurerm_service_plan.function_plan`, `os_type = "Linux"`,
 `sku_name = "Y1"`). É a opção que corresponde literalmente ao requisito do
@@ -61,7 +61,7 @@ ser recriado em outra região sem afetar o AKS/Postgres, a solução foi
 provisionar **só os recursos da Function** (Storage Account, Service Plan,
 Function App) numa região diferente do Resource Group — `East US`, via a
 nova variável `var.function_location` em
-[`infra/variables.tf`](https://github.com/SEU_USUARIO/oficina-lambda-auth-cpf/blob/main/infra/variables.tf)
+[`infra/variables.tf`](https://github.com/gilgledson/fiat-tech-challenge-lambda-auth-cpf/blob/main/infra/variables.tf)
 (repositório `oficina-lambda-auth-cpf`). Azure permite recursos em qualquer
 região dentro de um Resource Group, independente da região "padrão" do
 próprio Resource Group — não há acoplamento técnico entre as duas.
