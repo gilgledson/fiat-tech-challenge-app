@@ -1,6 +1,6 @@
 # Roteiro — Vídeo de Demonstração (Fase 3)
 
-Duração alvo: **~13 min** (limite do desafio: 15 min). Upload no YouTube ou
+Duração alvo: **~13:30 min** (limite do desafio: 15 min). Upload no YouTube ou
 Vimeo, público ou não-listado.
 
 ## Checklist antes de gravar
@@ -47,13 +47,24 @@ visíveis) — app, infra-kubernetes, infra-database, lambda-auth-cpf.
 
 - Abrir [`docs/architecture/diagrama-componentes.mmd`](architecture/diagrama-componentes.mmd)
   renderizado (print ou Mermaid Live).
-- Narrar o fluxo em 1 frase por componente: Traefik (gateway) → AKS (API
-  Quarkus) → Postgres Flexible Server; Function Azure separada pra login por
-  CPF, mesma chave JWT que a API valida; New Relic observando tudo.
+- Narrar o fluxo em 1 frase por componente: **Traefik como API Gateway**
+  (único ponto de entrada externo, roteia pra API) → AKS (API Quarkus) →
+  Postgres Flexible Server; Function Azure separada pra login por CPF, mesma
+  chave JWT que a API valida; New Relic observando tudo.
 - Citar rapidamente os 4 repositórios e o motivo da separação (requisito do
   desafio + isolamento de CI/CD).
 
-## 2:00 – 4:30 | Autenticação por CPF + Consumo de API protegida
+## 2:00 – 4:30 | API Gateway + Autenticação por CPF + Consumo de API protegida
+
+0. **Mostrar o Gateway antes de usar ele** (~20s): terminal,
+   `kubectl get svc -n gateway` — apontar o `Service traefik` como
+   `LoadBalancer` com o `EXTERNAL-IP` real, e o pod do Traefik `Running`
+   (`kubectl get pods -n gateway`). Narrar: "esse IP é a única porta de
+   entrada externa do cluster — o `oficina-api-service` é `ClusterIP`, não
+   tem IP público próprio, só o Traefik na frente decide o roteamento." Se
+   sobrar tempo/confiança, `kubectl port-forward svc/traefik-dashboard 8080:8080
+   -n gateway` e abrir `localhost:8080` rapidinho pra mostrar o router
+   configurado no dashboard do próprio Traefik.
 
 Via Postman (ou `curl`), ao vivo:
 
@@ -62,9 +73,10 @@ Via Postman (ou `curl`), ao vivo:
    com CPF mal formado → mostrar `400`.
 2. **CPF válido de cliente cadastrado** → mesma rota → mostrar `200` e o
    `access_token` (JWT) na resposta.
-3. **Usar o token** num endpoint protegido da API principal (ex:
-   `GET http://<EXTERNAL-IP>/api/ordens`, header
-   `Authorization: Bearer <token>`) → `200`, dados reais.
+3. **Usar o token** num endpoint protegido da API principal, batendo direto
+   no **IP do Gateway** (ex: `GET http://20.206.175.32/api/ordens`, header
+   `Authorization: Bearer <token>`) → `200`, dados reais. Reforçar: "essa
+   chamada passou pelo Traefik antes de chegar na API."
 4. **Sem token** na mesma rota → `401`.
 5. (Opcional, reforça o requisito "proteger rotas sensíveis") token de
    `CLIENTE` numa rota exclusiva de staff → `403`.
@@ -141,3 +153,7 @@ enquanto o dashboard está na tela:
   6 itens obrigatórios (autenticação CPF, pipeline CI/CD, deploy
   automatizado, consumo de API protegida, dashboard ao vivo, logs/traces)
   precisam aparecer todos.
+- O **API Gateway** (Traefik) não é um dos 6 itens explicitamente listados
+  no PDF pra demonstrar no vídeo, mas é requisito obrigatório da Fase 3 —
+  por isso ganhou um passo dedicado (bloco 0, antes da autenticação) em vez
+  de aparecer só implicitamente nas chamadas HTTP.
